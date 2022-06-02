@@ -51,9 +51,14 @@ void DeadCodeElimination::visitBranch(BranchInst *inst) {
 }
 
 void DeadCodeElimination::visitCmp(CmpInst *inst) {
+	// TODO: in this function we should get the type of comparison (this github repo
+	// lines 335 829 may help https://github.com/SandroMaglione/range-analysis-llvm/blob/master/BranchRange.cpp)
+	// and then verify if one of the branches will never be taken, for instance i > 100,
+	// if the range of i is [0, 99], the true branch will never be taken!.
+
   Range range_op0 = getAnalysis<InterProceduralRA<Cousot>>().getRange(inst->getOperand(0));
   Range range_op1 = getAnalysis<InterProceduralRA<Cousot>>().getRange(inst->getOperand(1));
-
+	
 	if(inst->getOperand(0)->hasName()) {
 		errs() << inst->getOperand(0)->getName().str() << " - ";
 	}
