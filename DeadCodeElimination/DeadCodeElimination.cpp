@@ -57,6 +57,7 @@ void DeadCodeElimination::visitCmp(CmpInst *inst) {
 	if(inst->getOperand(0)->hasName()) {
 		errs() << inst->getOperand(0)->getName().str() << " - ";
 	}
+
 	range_op0.print(errs());
 	errs() << "\n";
 

@@ -2,7 +2,7 @@ all: env
 	cmake --build build/
 
 examples-ir:
-	/opt/local/libexec/llvm-8.0/bin/clang -S -emit-llvm -o ./examples/example0.ll ./examples/program0.cpp
+	/opt/local/libexec/llvm-8.0/bin/clang -Xclang -disable-O0-optnone ./examples/program0.cpp -o ./examples/example0.ll -c -emit-llvm
 	/opt/local/libexec/llvm-8.0/bin/clang -S -emit-llvm -o ./examples/example1.ll ./examples/program1.cpp
 
 run-range-analysis:
