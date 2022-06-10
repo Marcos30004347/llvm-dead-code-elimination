@@ -7,6 +7,9 @@
 #include "llvm/IR/Instructions.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Transforms/Utils/Local.h"
+#include "llvm/Transforms/Utils/BasicBlockUtils.h"
+
 #include <iterator>
 
 using namespace llvm;
@@ -20,7 +23,16 @@ void DeadCodeElimination::visitBranch(BranchInst *inst) {
   if (inst->isConditional()) {
 		CmpInst* cond = dyn_cast<CmpInst>(inst->getCondition());
 
-		visitCmp(cond);
+		int cmpAnalysis = visitCmp(cond);
+
+    errs() << cmpAnalysis << "\n";
+
+    // if (cmpAnalysis != -1) {
+    //   BranchInst* New = BranchInst::Create(inst->getSuccessor(cmpAnalysis));
+    //   ICmpInst *cond = dyn_cast<ICmpInst>(inst->getCondition());
+    //   ReplaceInstWithInst(inst, New);
+    //   RecursivelyDeleteTriviallyDeadInstructions(cond);
+    // }
 		
 		// Range range_op0 =
     //     getAnalysis<InterProceduralRA<Cousot>>().getRange(inst->getOperand(0));
@@ -50,7 +62,87 @@ void DeadCodeElimination::visitBranch(BranchInst *inst) {
   }
 }
 
-void DeadCodeElimination::visitCmp(CmpInst *inst) {
+int getCmpAnalysis(Range &I, Range &J, ICmpInst::Predicate pred) {
+  
+  // i < j
+  if (pred == ICmpInst::ICMP_SLT) {
+    // In this first case, i is always greater or equal than j
+    if (I.getLower().sge(J.getUpper())) return 1; // I.l >= J.u
+
+    // In this second case, i is always lower than j
+    if(I.getUpper().slt(J.getLower())) return 0; // I.u < J.l
+
+  }
+
+  if (pred == ICmpInst::ICMP_ULT) {
+    // In this first case, i is always greater or equal than j
+    if (I.getLower().uge(J.getUpper())) return 1; // I.l >= J.u
+
+    // In this second case, i is always lower than j
+    if(I.getUpper().ult(J.getLower())) return 0; // I.u < J.l
+  
+  }
+
+
+  // i > j
+  if (pred == ICmpInst::ICMP_SGT) {
+    // In this first case, i is always lower or equal than j
+    if (I.getUpper().sle(J.getLower())) return 1; // I.u <= J.l
+
+    // In this second case, i is always greater than j
+    if (I.getLower().sgt(J.getUpper())) return 0; // I.l > J.u
+
+  }
+
+  if (pred == ICmpInst::ICMP_UGT) {
+    // In this first case, i is always lower or equal than j
+    if (I.getUpper().ule(J.getLower())) return 1; // I.u <= J.l
+
+    // In this second case, i is always greater than j
+    if (I.getLower().ugt(J.getUpper())) return 0; // I.l > J.u
+  }
+
+
+  // i <= j
+  if (pred == ICmpInst::ICMP_SLE) {
+    // In this first case, i is always greater than j
+    if (I.getLower().sgt(J.getUpper())) return 1; // I.l > J.u
+
+    // In this second case, i is always lower or equal than j
+    if (I.getUpper().sle(J.getLower())) return 0; // I.u <= J.l
+  }
+
+  if (pred == ICmpInst::ICMP_ULE) {
+    // In this first case, i is always greater than j
+    if (I.getLower().ugt(J.getUpper())) return 1; // I.l > J.u
+
+    // In this second case, i is always lower or equal than j
+    if (I.getUpper().ule(J.getLower())) return 0; // I.u <= J.l
+  }
+
+
+  // i >= j
+  if (pred == ICmpInst::ICMP_SGE) {
+    // In this first case, i is always lower than j
+    if (I.getUpper().slt(J.getLower())) return 1; // I.u < J.l
+
+    // In this second case, i is always greater or equal than j
+    if (I.getLower().sge(J.getUpper())) return 0; // I.l >= J.u
+  }
+
+  if (pred == ICmpInst::ICMP_UGE) {
+    // In this first case, i is always lower than j
+    if (I.getUpper().ult(J.getLower())) return 1; // I.u < J.l
+
+    // In this second case, i is always greater or equal than j
+    if (I.getLower().uge(J.getUpper())) return 0; // I.l >= J.u
+  }
+
+  return -1;
+
+}
+
+int DeadCodeElimination::visitCmp(CmpInst *inst) {
 	// TODO: in this function we should get the type of comparison (this github repo
 	// lines 335 829 may help https://github.com/SandroMaglione/range-analysis-llvm/blob/master/BranchRange.cpp)
 	// and then verify if one of the branches will never be taken, for instance i > 100,
@@ -59,18 +151,21 @@ void DeadCodeElimination::visitCmp(CmpInst *inst) {
   Range range_op0 = getAnalysis<InterProceduralRA<Cousot>>().getRange(inst->getOperand(0));
   Range range_op1 = getAnalysis<InterProceduralRA<Cousot>>().getRange(inst->getOperand(1));
 	
-	if(inst->getOperand(0)->hasName()) {
-		errs() << inst->getOperand(0)->getName().str() << " - ";
-	}
+  return getCmpAnalysis(range_op0, range_op1, inst->getPredicate());
 
-	range_op0.print(errs());
-	errs() << "\n";
+  
+	// if(inst->getOperand(0)->hasName()) {
+	// 	errs() << inst->getOperand(0)->getName().str() << " - ";
+	// }
 
-	if(inst->getOperand(1)->hasName()) {
-		errs() << inst->getOperand(1)->getName().str() << " - ";
-	}
-	range_op1.print(errs());
-	errs() << "\n";
+	// range_op0.print(errs());
+	// errs() << "\n";
+
+	// if(inst->getOperand(1)->hasName()) {
+	// 	errs() << inst->getOperand(1)->getName().str() << " - ";
+	// }
+	// range_op1.print(errs());
+	// errs() << "\n";
 	
 }
 
@@ -84,10 +179,6 @@ void DeadCodeElimination::visitPhiNode(PHINode *inst) {}
 void DeadCodeElimination::visitInstruction(Instruction *inst) {
   if (BranchInst *branch = dyn_cast<BranchInst>(inst)) {
     return visitBranch(branch);
-  }
-	
-  if (CmpInst *cmp = dyn_cast<CmpInst>(inst)) {
-    return visitCmp(cmp);
   }
 }
 

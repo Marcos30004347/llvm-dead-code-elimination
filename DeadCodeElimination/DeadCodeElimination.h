@@ -19,7 +19,7 @@ struct DeadCodeElimination : public FunctionPass {
   bool runOnFunction(Function &F) override;
  
   void visitBranch(BranchInst *inst);
-  void visitCmp(CmpInst *inst);
+  int visitCmp(CmpInst *inst);
   void visitCall(CallInst *inst);
   void visitLoad(LoadInst *inst);
   void visitSelect(SelectInst *inst);
