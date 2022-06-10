@@ -7,7 +7,7 @@ examples-ir:
 
 run-range-analysis:
 	/opt/local/libexec/llvm-8.0/bin/opt -instnamer -mem2reg -break-crit-edges ./examples/example0.ll -S -o example.ll
-	/opt/local/libexec/llvm-8.0/bin/opt -load ./build/libRangeAnalysis.dylib -vssa -client-ra -dead-code-elimination -o=example.ll < ./example.ll
+	/opt/local/libexec/llvm-8.0/bin/opt -load ./build/libRangeAnalysis.dylib -vssa -dead-code-elimination -S -o out2.ll < ./example.ll
 
 env:
 	cmake -DLLVM_ENABLE_STATS=1 -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DLLVM_INSTALL_DIR=/opt/local/libexec/llvm-8.0 -G "Unix Makefiles" -B build/

@@ -34,16 +34,14 @@ char DeadCodeElimination::ID = 0;
 
 
 static RegisterPass<DeadCodeElimination> X("dead-code-elimination",
-                                           "Dead Code Elimination Pass",
-                                           false /* Only looks at CFG */,
-                                           false /* Analysis Pass */
-);
+                                           "Dead Code Elimination Pass"
+                                           );
 
-static void registerDeadCodeEliminationPass(const PassManagerBuilder &,
-                                            legacy::PassManagerBase &PM) {
-  PM.add(new InterProceduralRA<CropDFS>());
-  PM.add(new DeadCodeElimination());
-}
+/* static void registerDeadCodeEliminationPass(const PassManagerBuilder &, */
+/*                                             legacy::PassManagerBase &PM) { */
+/*   PM.add(new InterProceduralRA<CropDFS>()); */
+/*   PM.add(new DeadCodeElimination()); */
+/* } */
 
-static RegisterStandardPasses Y(PassManagerBuilder::EP_EarlyAsPossible,
-                                registerDeadCodeEliminationPass);
+/* static RegisterStandardPasses Y(PassManagerBuilder::EP_EarlyAsPossible, */
+/*                                 registerDeadCodeEliminationPass); */
