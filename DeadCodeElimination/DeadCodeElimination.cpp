@@ -9,8 +9,11 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Transforms/Utils/Local.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
+#include "llvm/ADT/Statistic.h"
 
 #include <iterator>
+
+#define DEBUG_TYPE "dead-code-elimination"
 
 using namespace llvm;
 
@@ -128,12 +131,40 @@ int DeadCodeElimination::visitCmp(CmpInst *inst) {
 
 
 bool DeadCodeElimination::runOnFunction(Function &F) {
-	for(BasicBlock& b : F.getBasicBlockList()) {
+	
+  int BBcounterBefore = 0;
+  int IcounterBefore = 0;
+
+  for(BasicBlock &BB : F) {
+    BBcounterBefore++;
+    for (Instruction &I : BB) {  
+      IcounterBefore++;
+    }
+  }
+  
+  for(BasicBlock& b : F.getBasicBlockList()) {
 		if(BranchInst* br = dyn_cast<BranchInst>(b.getTerminator()))
 			visitBranch(br);
 	}
 
 	removeUnreachableBlocks(F);
+
+  int BBcounterAfter = 0;
+  int IcounterAfter = 0;
+
+  for(BasicBlock &BB : F) {
+    BBcounterAfter++;
+    for (Instruction &I : BB) {  
+      IcounterAfter++;
+    }
+  }
+
+
+  STATISTIC(InstructionsEliminated, "Number of instructions eliminated");
+  STATISTIC(BasicBlocksEliminated,  "Number of basic blocks entirely eliminated");
+
+  InstructionsEliminated = IcounterBefore - IcounterAfter;
+  BasicBlocksEliminated = BBcounterBefore - BBcounterAfter;
 
   return false;
 }

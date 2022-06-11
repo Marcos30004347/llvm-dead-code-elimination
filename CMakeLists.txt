@@ -6,7 +6,7 @@ set (CMAKE_CXX_STANDARD 11)
 
 add_definitions(-DLLVM_ENABLE_STATS)
 
-find_package(LLVM 8 REQUIRED CONFIG PATHS /opt/local/libexec/llvm-8.0)
+find_package(LLVM 8 REQUIRED CONFIG PATHS /home/luizcouto/Apps/llvm-project-llvmorg-8.0.1/build)
 
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
@@ -17,7 +17,7 @@ include_directories(${LLVM_INCLUDE_DIRS})
 
 string (REPLACE "\n" " " LLVM_CONFIG "${LLVM_CONFIG_N}")
 
-set (CMAKE_CXX_FLAGS "-O3 -g ${LLVM_CONFIG} -undefined dynamic_lookup")
+set (CMAKE_CXX_FLAGS "-O3 -g ${LLVM_CONFIG} -undefined dynamic_lookup -Wall -fno-rtti")
 
 include_directories (${CMAKE_CURRENT_SOURCE_DIR})
 
