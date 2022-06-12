@@ -4,9 +4,7 @@ project (RangeAnalysis)
 
 set (CMAKE_CXX_STANDARD 11)
 
-add_definitions(-DLLVM_ENABLE_STATS)
-
-find_package(LLVM 8 REQUIRED CONFIG PATHS /opt/local/libexec/llvm-8.0)
+find_package(LLVM 8 REQUIRED CONFIG)
 
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
